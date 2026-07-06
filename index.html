@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mana11Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #12101A;
+            --surface: #1E1A24;
+            --border: #3D3644;
+            --text: #F9F9F9;
+            --text-secondary: #CEACBD;
+            --primary: #ED153E;
+            --accent: #A7777D;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        .container {
+            max-width: 540px;
+            margin: 0 auto;
+            padding: 40px 16px;
+        }
+        h1 { font-size: 1.8rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: var(--accent); font-size: 0.9rem; margin-bottom: 32px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .tool-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 14px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .tool-card:hover { transform: scale(1.03); border-color: var(--primary); }
+        .tool-card:active { transform: scale(0.97); }
+        .tool-icon { font-size: 2rem; margin-bottom: 8px; }
+        .tool-name { font-weight: 600; font-size: 0.95rem; }
+        .tool-desc { font-size: 0.75rem; color: var(--accent); margin-top: 4px; }
+        .group-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 24px;
+            margin-bottom: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #D4DBDF;
+            color: var(--accent);
+            font-size: 0.8rem;
+        }
+        .footer a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.82rem;
+            transition: opacity 0.15s;
+        }
+        .footer a:hover { opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mana11Lab</h1>
+        <p class="subtitle">เครื่องมือเล็กๆ ใช้ฟรี ไม่มีโฆษณา</p>
+        <p class="group-label">💸 การเงิน</p>
+        <div class="grid">
+            <a href="SplitBill/" class="tool-card">
+                <div class="tool-icon">🧾</div>
+                <div class="tool-name">SplitBill</div>
+                <div class="tool-desc">หารบิลง่ายๆ</div>
+            </a>
+            <a href="CreditCardTracker/" class="tool-card">
+                <div class="tool-icon">💳</div>
+                <div class="tool-name">CreditCardTracker</div>
+                <div class="tool-desc">ติดตามค่าใช้จ่ายบัตรเครดิต</div>
+            </a>
+            <a href="MiniCalc/" class="tool-card">
+                <div class="tool-icon">🧮</div>
+                <div class="tool-name">MiniCalc</div>
+                <div class="tool-desc">คำนวณงบ / 6 โถ / %Calc</div>
+            </a>
+        </div>
+
+        <p class="group-label">🏸 กีฬา & 🎯 เกม</p>
+        <div class="grid">
+            <a href="KuanBad/" class="tool-card">
+                <div class="tool-icon">🏸</div>
+                <div class="tool-name">KuanBad</div>
+                <div class="tool-desc">คิดเงินก๊วนแบด</div>
+            </a>
+            <a href="BadCost/" class="tool-card">
+                <div class="tool-icon">🏸</div>
+                <div class="tool-name">BadCost</div>
+                <div class="tool-desc">คำนวณค่าตีแบดส่วนตัว</div>
+            </a>
+            <a href="TallyUp/" class="tool-card">
+                <div class="tool-icon">🎯</div>
+                <div class="tool-name">TallyUp</div>
+                <div class="tool-desc">จดแต้มวงไพ่</div>
+            </a>
+            <a href="CardBank/" class="tool-card">
+                <div class="tool-icon">🃏</div>
+                <div class="tool-name">CardBank</div>
+                <div class="tool-desc">จัดการ Chip วงไพ่</div>
+            </a>
+        </div>
+
+        <p class="group-label">📋 จัดการชีวิต</p>
+        <div class="grid">
+            <a href="PriorityMatrix/" class="tool-card">
+                <div class="tool-icon">📋</div>
+                <div class="tool-name">Priority Matrix</div>
+                <div class="tool-desc">จัดลำดับงาน 4 ช่อง</div>
+            </a>
+            <a href="ParetoFocus/" class="tool-card">
+                <div class="tool-icon">⚡</div>
+                <div class="tool-name">80/20 Focus</div>
+                <div class="tool-desc">กฎพาเรโต โฟกัสสิ่งสำคัญ</div>
+            </a>
+        </div>
+        <div class="footer">
+            <p>สร้างโดย Mana11Lab</p>
+            <a href="https://promptpay.io/0923959404" target="_blank">☕ เลี้ยงน้ำหวานผ่าน PromptPay</a>
+        </div>
+    </div>
+</body>
+</html>

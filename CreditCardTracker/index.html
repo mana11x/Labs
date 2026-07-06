@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Tracker</title>
+    <link rel="icon" href="icon.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#12101A">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div id="app" class="container"></div>
+    <nav class="bottom-nav">
+        <a href="#add" id="nav-add">➕<br><small>บันทึก</small></a>
+        <a href="#expenses" id="nav-expenses">📋<br><small>รายการ</small></a>
+        <a href="#summary" id="nav-summary">📊<br><small>สรุป</small></a>
+        <a href="#cards" id="nav-cards">💳<br><small>บัตร</small></a>
+    </nav>
+    <script src="app.js"></script>
+    <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>

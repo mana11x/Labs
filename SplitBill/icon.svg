@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#132440"/>
+  
+  <!-- Receipt paper -->
+  <path d="M160 80 L352 80 L352 400 L336 384 L320 400 L304 384 L288 400 L272 384 L256 400 L240 384 L224 400 L208 384 L192 400 L176 384 L160 400 Z" fill="white"/>
+  
+  <!-- Lines on receipt -->
+  <rect x="192" y="130" width="128" height="12" rx="6" fill="#16476A"/>
+  <rect x="192" y="170" width="100" height="10" rx="5" fill="#3B9797"/>
+  <rect x="192" y="200" width="80" height="10" rx="5" fill="#3B9797"/>
+  <rect x="192" y="230" width="110" height="10" rx="5" fill="#3B9797"/>
+  
+  <!-- Divider line -->
+  <rect x="192" y="265" width="128" height="3" rx="1.5" fill="#132440" opacity="0.3"/>
+  
+  <!-- Total amount -->
+  <rect x="192" y="290" width="70" height="12" rx="6" fill="#BF092F"/>
+  <rect x="272" y="290" width="48" height="12" rx="6" fill="#BF092F"/>
+  
+  <!-- Split arrows -->
+  <path d="M256 340 L230 365 M256 340 L256 365 M256 340 L282 365" stroke="#16476A" stroke-width="8" stroke-linecap="round" fill="none"/>
+</svg>
