@@ -92,14 +92,14 @@ function calcJars() {
 }
 
 // === PERCENT CALC ===
-let percentMode = 1;
+let percentMode = parseInt(getInput('percentMode', 1));
 
 function renderPercent() {
     app.innerHTML = `
         <h4 class="text-center mb-3">📊 %Calc</h4>
         <div class="flex gap-1 mb-3">
-            <button class="btn ${percentMode === 1 ? 'btn-primary' : 'btn-outline'}" style="flex:1" onclick="percentMode=1;renderPercent()">หา %เปลี่ยนแปลง</button>
-            <button class="btn ${percentMode === 2 ? 'btn-primary' : 'btn-outline'}" style="flex:1" onclick="percentMode=2;renderPercent()">หายอดจาก %</button>
+            <button class="btn ${percentMode === 1 ? 'btn-primary' : 'btn-outline'}" style="flex:1" onclick="percentMode=1;saveInput('percentMode',1);renderPercent()">หา %เปลี่ยนแปลง</button>
+            <button class="btn ${percentMode === 2 ? 'btn-primary' : 'btn-outline'}" style="flex:1" onclick="percentMode=2;saveInput('percentMode',2);renderPercent()">หายอดจาก %</button>
         </div>
         <div class="card">
             ${percentMode === 1 ? renderMode1() : renderMode2()}
@@ -133,12 +133,13 @@ function renderMode2() {
 
 function setDir(dir) {
     percentDir = dir;
+    saveInput('percentDir', dir);
     $('dir-buttons').innerHTML = `
         <button class="btn btn-sm ${percentDir === 'up' ? 'btn-primary' : 'btn-outline'}" onclick="setDir('up')">เพิ่มขึ้น</button>
         <button class="btn btn-sm ${percentDir === 'down' ? 'btn-primary' : 'btn-outline'}" onclick="setDir('down')">ลดลง</button>`;
 }
 
-let percentDir = 'up';
+let percentDir = getInput('percentDir', 'up');
 
 function calcMode1() {
     const oldVal = parseFloat($('pc-old').value) || 0;
