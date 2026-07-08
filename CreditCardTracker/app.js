@@ -69,13 +69,14 @@ function renderAdd() {
 
     let html = `<h4 class="text-center mb-3">บันทึกรายการ</h4>`;
 
-    if (!cards.length) {
-        html += `<div class="text-center mt-3"><p class="text-muted">ยังไม่มีบัตร กรุณาเพิ่มบัตรก่อน</p>
-            <a href="#cards" class="btn btn-primary">💳 เพิ่มบัตร</a></div>`;
+    const activeCards = cards.filter(c => c.active !== false);
+    if (!activeCards.length) {
+        html += `<div class="text-center mt-3"><p class="text-muted">ยังไม่มีบัตรที่ Active กรุณาเพิ่มหรือเปิดบัตรก่อน</p>
+            <a href="#cards" class="btn btn-primary">💳 จัดการบัตร</a></div>`;
     } else {
-        // Card select
+        // Card select (only active)
         html += `<div class="mb-3"><span class="form-label">ชื่อบัตร</span><div class="chip-group">`;
-        cards.forEach(c => {
+        activeCards.forEach(c => {
             html += `<button class="chip ${ui.selectedCard === c.id ? 'chip-active' : ''}" onclick="ui.selectedCard='${c.id}';render()">${esc(c.name)}</button>`;
         });
         html += `</div></div>`;
@@ -127,9 +128,10 @@ function renderExpenses() {
     } else {
         list.forEach(ex => {
             const expanded = ui.expandedId === ex.id;
-            html += `<div class="card mb-2 expense-item" onclick="toggleExpand('${ex.id}')">
+            html += `<div class="card mb-2 expense-item ${ex.reserved ? 'expense-reserved' : ''}" onclick="toggleExpand('${ex.id}')">
                 <div class="flex items-center" style="justify-content:space-between">
                     <div>
+                        ${ex.reserved ? '<span class="reserved-badge">✅</span>' : ''}
                         <small class="text-muted">${ex.date.slice(8,10)}/${ex.date.slice(5,7)}</small>
                         <strong style="margin-left:8px">${esc(getCardName(ex.cardId))}</strong>
                         ${ex.note ? `<small class="text-muted" style="margin-left:6px">${esc(ex.note)}</small>` : ''}
@@ -159,7 +161,9 @@ function renderExpenses() {
                 } else {
                     html += `<button class="btn btn-outline-danger btn-sm" onclick="ui.confirmDeleteExpense='${ex.id}';render()">🗑️ ลบ</button>`;
                 }
-                html += `</div></div>`;
+                html += `</div>
+                    <button class="btn btn-sm ${ex.reserved ? 'btn-reserved-active' : 'btn-reserved'}" onclick="toggleReserved('${ex.id}')">${ex.reserved ? '✅ สำรองแล้ว' : '💰 สำรองเงิน'}</button>
+                </div>`;
             }
             html += `</div>`;
         });
@@ -183,10 +187,18 @@ function renderSummary() {
     });
     html += `</div></div>`;
 
-    // Total
+    // Total + reserved breakdown
+    const cycleExpenses = getExpensesByCycle(ui.selectedSummaryCycle);
+    const reservedTotal = cycleExpenses.filter(e => e.reserved).reduce((s, e) => s + e.amount, 0);
+    const unreservedTotal = total - reservedTotal;
+
     html += `<div class="card mb-3 text-center">
         <small class="text-muted">ยอดรวมทุกบัตร</small>
         <h4 style="margin-top:4px">${total.toLocaleString(undefined,{minimumFractionDigits:2})} บาท</h4>
+        <div class="flex" style="justify-content:center;gap:16px;margin-top:8px">
+            <small class="reserved-summary">✅ สำรองแล้ว ${reservedTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</small>
+            <small class="unreserved-summary">⏳ ยังไม่สำรอง ${unreservedTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</small>
+        </div>
     </div>`;
 
     // By card
@@ -222,7 +234,8 @@ function renderCards() {
         html += `<p class="text-center text-muted">ยังไม่มีบัตร</p>`;
     } else {
         cards.forEach((c, idx) => {
-            html += `<div class="card mb-2">`;
+            const isActive = c.active !== false;
+            html += `<div class="card mb-2 ${!isActive ? 'card-inactive' : ''}">`;
             if (ui.editingCard === c.id) {
                 html += `<div class="input-group">
                     <input id="editCardInput" value="${esc(c.name)}" onkeydown="if(event.key==='Enter')saveEditCard('${c.id}');if(event.key==='Escape'){ui.editingCard=null;render();}">
@@ -235,9 +248,10 @@ function renderCards() {
                             ${idx > 0 ? `<button class="btn btn-sm btn-outline" style="padding:2px 6px;font-size:0.7rem" onclick="moveCard(${idx},-1)">▲</button>` : ''}
                             ${idx < cards.length - 1 ? `<button class="btn btn-sm btn-outline" style="padding:2px 6px;font-size:0.7rem" onclick="moveCard(${idx},1)">▼</button>` : ''}
                         </div>
-                        <strong onclick="startEditCard('${c.id}')" style="cursor:pointer">💳 ${esc(c.name)}</strong>
+                        <strong onclick="startEditCard('${c.id}')" style="cursor:pointer">${isActive ? '💳' : '🚫'} ${esc(c.name)}</strong>
                     </div>
-                    <div class="flex gap-1">`;
+                    <div class="flex gap-1">
+                        <button class="btn btn-sm ${isActive ? 'btn-card-active' : 'btn-card-inactive'}" onclick="toggleCardActive('${c.id}')">${isActive ? 'Active' : 'Inactive'}</button>`;
                 if (ui.confirmDeleteCard === c.id) {
                     html += `<button class="btn btn-sm btn-danger" onclick="doDeleteCard('${c.id}')">ยืนยัน</button>
                         <button class="btn btn-sm btn-outline" onclick="ui.confirmDeleteCard=null;render()">ยกเลิก</button>`;
@@ -277,7 +291,7 @@ function copyLink() {
 function saveExpense() {
     const amount = parseFloat(ui.expenseAmount) || 0;
     if (!ui.selectedCard || amount <= 0 || !ui.selectedCycle) { showToast('กรุณากรอกข้อมูลให้ครบ', 'danger'); return; }
-    expenses.push({ id: genId(), date: ui.expenseDate, cardId: ui.selectedCard, amount, billingCycle: ui.selectedCycle, note: ui.expenseNote });
+    expenses.push({ id: genId(), date: ui.expenseDate, cardId: ui.selectedCard, amount, billingCycle: ui.selectedCycle, note: ui.expenseNote, reserved: false });
     saveExpenses();
     ui.expenseAmount = '';
     ui.expenseNote = '';
@@ -302,7 +316,7 @@ function addCard() {
     const el = document.getElementById('newCardInput');
     const name = el.value.trim();
     if (!name) return;
-    cards.push({ id: genId(), name });
+    cards.push({ id: genId(), name, active: true });
     el.value = '';
     saveCards(); render();
 }
@@ -327,6 +341,18 @@ function moveCard(idx, dir) {
     if (newIdx < 0 || newIdx >= cards.length) return;
     [cards[idx], cards[newIdx]] = [cards[newIdx], cards[idx]];
     saveCards(); render();
+}
+function toggleCardActive(id) {
+    const card = cards.find(c => c.id === id);
+    if (card) card.active = card.active === false ? true : false;
+    saveCards(); render();
+}
+
+// === Actions: Reserved ===
+function toggleReserved(id) {
+    const ex = expenses.find(e => e.id === id);
+    if (ex) ex.reserved = !ex.reserved;
+    saveExpenses(); render();
 }
 
 // === Init ===

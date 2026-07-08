@@ -255,3 +255,46 @@ hr {
     transition: background 0.15s;
 }
 .expense-item:hover { background: var(--surface); }
+
+/* Reserved expense */
+.expense-reserved {
+    border-color: #2E4A3A;
+    background: #1A2E24;
+}
+.reserved-badge {
+    font-size: 0.75rem;
+    margin-right: 2px;
+}
+.btn-reserved {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--accent);
+}
+.btn-reserved-active {
+    background: #2E4A3A;
+    border: 1.5px solid #4A7A5A;
+    color: #8FD4A4;
+}
+
+/* Card active/inactive */
+.card-inactive {
+    opacity: 0.5;
+}
+.btn-card-active {
+    background: #2E4A3A;
+    border: 1.5px solid #4A7A5A;
+    color: #8FD4A4;
+}
+.btn-card-inactive {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--accent);
+}
+
+/* Summary reserved */
+.reserved-summary {
+    color: #8FD4A4;
+}
+.unreserved-summary {
+    color: var(--accent);
+}
