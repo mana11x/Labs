@@ -104,7 +104,6 @@ function renderAdd() {
         html += `<button class="btn btn-primary" style="width:100%" onclick="saveExpense()">💾 บันทึก</button>`;
     }
 
-    html += footer();
     document.getElementById('app').innerHTML = html;
 }
 
