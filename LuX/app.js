@@ -1048,7 +1048,6 @@ function renderEntry() {
             <textarea id="txtEntries" rows="12" placeholder="พิมพ์เลข เช่น 93+20-20&#10;398+20-20*30&#10;5+100-100">${esc(cust.entries)}</textarea>
         </div>
         <div class="flex gap-1 mt-1">
-            <button class="btn btn-success" onclick="saveEntries()">💾 บันทึก</button>
             <button class="btn btn-secondary" onclick="copyExcel()">📊 Excel</button>
             <button class="btn btn-outline" onclick="clearEntries()">🗑️ ล้าง</button>
         </div>
@@ -1059,7 +1058,16 @@ function renderEntry() {
         selectedCustIdx = parseInt(e.target.value);
         renderEntry();
     });
-    document.getElementById('txtEntries').addEventListener('input', updateEntryStatus);
+    document.getElementById('txtEntries').addEventListener('input', () => {
+        updateEntryStatus();
+        debounceAutoSave();
+    });
+}
+
+let autoSaveTimer = null;
+function debounceAutoSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(saveEntriesSilent, 500);
 }
 
 function updateEntryStatus() {
