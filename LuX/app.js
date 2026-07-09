@@ -715,7 +715,9 @@ function renderSession() {
             </select>
             <button class="btn btn-primary" onclick="onNewSession()">+ ใหม่</button>
         </div>
-        ${cur ? `<div class="flex gap-1 mb-2">
+        ${showNewSessionInput ? `<div class="card mb-2"><label class="form-label">ชื่องวดใหม่</label><div class="flex gap-1"><input id="newSessionName" value="${new Date().toLocaleDateString('th-TH')}" style="flex:1"><button class="btn btn-sm btn-success" onclick="confirmNewSession()">✓</button><button class="btn btn-sm btn-secondary" onclick="cancelNewSession()">✕</button></div></div>` : ''}
+        ${confirmDeleteSession && cur ? `<div class="card mb-2" style="border-color:var(--primary)"><p style="font-size:0.85rem">ลบงวด "${esc(cur.name)}"?</p><div class="flex gap-1 mt-1"><button class="btn btn-sm btn-danger" onclick="doDeleteSession()">ยืนยัน</button><button class="btn btn-sm btn-secondary" onclick="cancelDeleteSession()">ยกเลิก</button></div></div>` : ''}
+        ${cur && !confirmDeleteSession ? `<div class="flex gap-1 mb-2">
             <button class="btn btn-sm btn-danger" onclick="onDeleteSession()">🗑️ ลบงวดนี้</button>
             <button class="btn btn-sm btn-outline" onclick="onExportSession()">📤 Export</button>
             <button class="btn btn-sm btn-outline" onclick="onImportSession()">📥 Import</button>
@@ -818,20 +820,45 @@ function saveConfig() {
     toast('บันทึกแล้ว');
 }
 
+let showNewSessionInput = false;
+
 function onNewSession() {
-    const name = prompt('ชื่องวดใหม่:', new Date().toLocaleDateString('th-TH'));
+    showNewSessionInput = true;
+    renderSession();
+    setTimeout(() => { const el = document.getElementById('newSessionName'); if (el) el.focus(); }, 50);
+}
+
+function confirmNewSession() {
+    const name = (document.getElementById('newSessionName').value || '').trim();
     if (!name) return;
     const sessions = loadSessions();
     const prevConfig = sessions.length > 0 ? sessions[0].config : null;
-    createNewSession(name.trim(), prevConfig);
+    createNewSession(name, prevConfig);
+    showNewSessionInput = false;
     renderSession();
 }
 
+function cancelNewSession() {
+    showNewSessionInput = false;
+    renderSession();
+}
+
+let confirmDeleteSession = false;
+
 function onDeleteSession() {
+    confirmDeleteSession = true;
+    renderSession();
+}
+
+function doDeleteSession() {
     const cur = getCurrentSession();
-    if (!cur) return;
-    if (!confirm(`ลบงวด "${cur.name}"?`)) return;
-    deleteSession(cur.id);
+    if (cur) deleteSession(cur.id);
+    confirmDeleteSession = false;
+    renderSession();
+}
+
+function cancelDeleteSession() {
+    confirmDeleteSession = false;
     renderSession();
 }
 
@@ -881,6 +908,7 @@ function renderCustomer() {
         const total = calcEntryTotal(cust.entries);
         grandTotal += total;
         if (editingCustIdx === i) return renderCustEditRow(cust, i);
+        if (confirmDeleteCustIdx === i) return `<div class="card mb-1" style="border-color:var(--primary)"><p style="font-size:0.85rem">ลบ ${esc(cust.name)}?</p><div class="flex gap-1 mt-1"><button class="btn btn-sm btn-danger" onclick="doDeleteCust(${i})">ยืนยัน</button><button class="btn btn-sm btn-secondary" onclick="cancelDeleteCust()">ยกเลิก</button></div></div>`;
         return `<div class="cust-item">
             <div class="move-btns"><button onclick="moveCust(${i},-1)">▲</button><button onclick="moveCust(${i},1)">▼</button></div>
             <span class="code">${esc(cust.code)}</span>
@@ -949,11 +977,23 @@ function saveCustEdit(i) {
     renderCustomer();
 }
 
+let confirmDeleteCustIdx = -1;
+
 function deleteCust(i) {
+    confirmDeleteCustIdx = i;
+    renderCustomer();
+}
+
+function doDeleteCust(i) {
     const cur = getCurrentSession(); if (!cur) return;
-    if (!confirm(`ลบ ${cur.customers[i].name}?`)) return;
     cur.customers.splice(i, 1);
     saveCurrentSession(cur);
+    confirmDeleteCustIdx = -1;
+    renderCustomer();
+}
+
+function cancelDeleteCust() {
+    confirmDeleteCustIdx = -1;
     renderCustomer();
 }
 
@@ -1012,6 +1052,7 @@ function renderEntry() {
             <button class="btn btn-secondary" onclick="copyExcel()">📊 Excel</button>
             <button class="btn btn-outline" onclick="clearEntries()">🗑️ ล้าง</button>
         </div>
+        ${confirmClearEntries ? `<div class="card mt-1" style="border-color:var(--primary)"><p style="font-size:0.85rem">ล้างเลขทั้งหมด?</p><div class="flex gap-1 mt-1"><button class="btn btn-sm btn-danger" onclick="doClearEntries()">ยืนยัน</button><button class="btn btn-sm btn-secondary" onclick="cancelClearEntries()">ยกเลิก</button></div></div>` : ''}
     `;
     document.getElementById('selCust').addEventListener('change', e => {
         saveEntriesSilent();
@@ -1061,12 +1102,25 @@ function copyExcel() {
     navigator.clipboard.writeText(sb).then(() => toast('คัดลอกแล้ว วางใน Excel ได้เลย'));
 }
 
+let confirmClearEntries = false;
+
 function clearEntries() {
     const cur = getCurrentSession(); if (!cur) return;
     if (!cur.customers[selectedCustIdx].entries) return;
-    if (!confirm('ล้างเลขทั้งหมด?')) return;
+    confirmClearEntries = true;
+    renderEntry();
+}
+
+function doClearEntries() {
+    const cur = getCurrentSession(); if (!cur) return;
     cur.customers[selectedCustIdx].entries = '';
     saveCurrentSession(cur);
+    confirmClearEntries = false;
+    renderEntry();
+}
+
+function cancelClearEntries() {
+    confirmClearEntries = false;
     renderEntry();
 }
 
