@@ -728,6 +728,9 @@ function renderSession() {
         setCurrentSessionId(e.target.value);
         renderSession();
     });
+    document.querySelectorAll('#app input[id^="cfg"]').forEach(el => {
+        el.addEventListener('input', debounceConfigSave);
+    });
 }
 
 function renderConfigUI(c) {
@@ -790,13 +793,19 @@ function renderConfigUI(c) {
                 <div><label class="form-label">ส่วนลด%</label><input id="cfgEED1" value="${esc(c.EE_Discount1)}"></div>
             </div>
         </div>
-        <button class="btn btn-success mt-2" onclick="saveConfig()">💾 บันทึก Config</button>
     `;
 }
 
 function toggleSec(key) {
+    saveConfig();
     sessionSections[key] = !sessionSections[key];
     renderSession();
+}
+
+let configSaveTimer = null;
+function debounceConfigSave() {
+    clearTimeout(configSaveTimer);
+    configSaveTimer = setTimeout(saveConfig, 500);
 }
 
 function saveConfig() {
