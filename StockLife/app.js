@@ -35,6 +35,7 @@ let view = 'main'; // 'main' | 'shop'
 let editingItem = null; // { catIdx, itemIdx }
 let confirmDelete = null; // { catIdx, itemIdx } or { catIdx }
 let confirmDeleteCat = null;
+let collapsed = new Set(); // catIdx ที่ย่ออยู่
 
 function render() {
     if (view === 'main') renderMain();
@@ -49,14 +50,20 @@ function renderMain() {
     </div>`;
 
     state.categories.forEach((cat, ci) => {
-        html += `<div class="cat-header">${esc(cat.name)} <small>(${cat.items.length})</small>
-            <button class="btn btn-sm btn-outline" style="margin-left:8px;font-size:0.7rem" onclick="editingItem={catIdx:${ci},itemIdx:-1};render()">+ เพิ่ม</button>
+        const isCollapsed = collapsed.has(ci);
+        const lowInCat = cat.items.filter(it => it.qty <= it.min).length;
+        html += `<div class="cat-header" onclick="toggleCat(${ci})">
+            <span class="chevron ${isCollapsed ? '' : 'open'}">▶</span>
+            ${esc(cat.name)} <small>(${cat.items.length})</small>
+            ${lowInCat > 0 ? `<span class="badge-low">${lowInCat}</span>` : ''}
+            <button class="btn btn-sm btn-outline" style="margin-left:auto;font-size:0.7rem" onclick="event.stopPropagation();editingItem={catIdx:${ci},itemIdx:-1};collapsed.delete(${ci});render()">+ เพิ่ม</button>
         </div>`;
 
         if (confirmDeleteCat === ci) {
             html += `<div class="card" style="border-color:var(--primary)"><p style="font-size:0.85rem">ลบหมวด "${esc(cat.name)}" ทั้งหมด?</p><div class="flex gap-1 mt-1"><button class="btn btn-sm btn-primary" onclick="doDeleteCat(${ci})">ยืนยัน</button><button class="btn btn-sm btn-secondary" onclick="confirmDeleteCat=null;render()">ยกเลิก</button></div></div>`;
         }
 
+        if (!isCollapsed) {
         cat.items.forEach((item, ii) => {
             const status = item.qty <= 0 ? 'low' : item.qty <= item.min ? 'warn' : 'ok';
 
@@ -87,6 +94,7 @@ function renderMain() {
         if (editingItem && editingItem.catIdx === ci && editingItem.itemIdx === -1) {
             html += renderAddItem(ci);
         }
+        } // end !isCollapsed
     });
 
     html += `<hr>
@@ -180,6 +188,12 @@ function copyShopping() {
         });
     });
     navigator.clipboard.writeText(lines.join('\n')).then(() => toast('คัดลอกรายการแล้ว'));
+}
+
+// --- Toggle ---
+function toggleCat(ci) {
+    if (collapsed.has(ci)) collapsed.delete(ci); else collapsed.add(ci);
+    render();
 }
 
 // --- Actions ---
