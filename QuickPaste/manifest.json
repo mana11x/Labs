@@ -1,0 +1,13 @@
+{
+  "name": "QuickPaste",
+  "short_name": "QuickPaste",
+  "description": "เก็บข้อความที่ใช้บ่อย คัดลอกได้ทันที",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#12101A",
+  "theme_color": "#12101A",
+  "id": "zk-quickpaste",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
