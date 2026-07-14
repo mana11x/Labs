@@ -277,7 +277,10 @@ function footer() {
             <a href="https://promptpay.io/0923959404" target="_blank" class="btn btn-sm btn-outline-warning">☕ เลี้ยงน้ำหวานผ่าน PromptPay</a>
         </div>
         <button class="btn btn-sm btn-outline" onclick="copyLink()" style="margin-top:8px">📎 แชร์แอพนี้</button>
-        <button class="btn btn-sm btn-outline" onclick="debugLS()" style="margin-top:8px">🐛 Debug LS</button>
+        <div class="mt-2" style="display:flex;gap:6px;justify-content:center">
+            <button class="btn btn-sm btn-outline" onclick="manualBackup()">💾 Backup</button>
+            <button class="btn btn-sm btn-outline" onclick="restoreBackup()">📂 Restore</button>
+        </div>
     </div>`;
 }
 
@@ -355,14 +358,56 @@ function toggleReserved(id) {
     saveExpenses(); render();
 }
 
-// === Debug (ลบทีหลัง) ===
-function debugLS() {
-    const keys = Object.keys(localStorage);
-    const cards = localStorage.getItem('credit_cards');
-    const expenses = localStorage.getItem('credit_card_expenses');
-    alert('Keys: ' + JSON.stringify(keys) + '\n\nCards: ' + (cards ? cards.slice(0,200) : 'null') + '\n\nExpenses count: ' + (expenses ? JSON.parse(expenses).length : 'null'));
+// === AutoBackup ===
+function autoBackup() {
+    if (!cards.length && !expenses.length) return;
+    const key = 'credit_card_last_backup';
+    const todayStr = today();
+    if (localStorage.getItem(key) === todayStr) return;
+    const data = JSON.stringify({ cards, expenses, backupDate: todayStr });
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `CreditCardTracker_${todayStr}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    localStorage.setItem(key, todayStr);
+    showToast('💾 Auto-backup สำเร็จ');
+}
+
+function restoreBackup() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (data.cards) { cards = data.cards; saveCards(); }
+                if (data.expenses) { expenses = data.expenses; saveExpenses(); }
+                showToast('✅ Restore สำเร็จ');
+                render();
+            } catch { showToast('ไฟล์ไม่ถูกต้อง', 'danger'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function manualBackup() {
+    const data = JSON.stringify({ cards, expenses, backupDate: today() });
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `CreditCardTracker_${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('💾 Backup สำเร็จ');
 }
 
 // === Init ===
-document.addEventListener('DOMContentLoaded', () => { loadAll(); route(); });
+document.addEventListener('DOMContentLoaded', () => { loadAll(); route(); autoBackup(); });
 window.addEventListener('hashchange', route);
