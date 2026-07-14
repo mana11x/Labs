@@ -277,6 +277,7 @@ function footer() {
             <a href="https://promptpay.io/0923959404" target="_blank" class="btn btn-sm btn-outline-warning">☕ เลี้ยงน้ำหวานผ่าน PromptPay</a>
         </div>
         <button class="btn btn-sm btn-outline" onclick="copyLink()" style="margin-top:8px">📎 แชร์แอพนี้</button>
+        <button class="btn btn-sm btn-outline" onclick="debugLS()" style="margin-top:8px">🐛 Debug LS</button>
     </div>`;
 }
 
@@ -352,6 +353,14 @@ function toggleReserved(id) {
     const ex = expenses.find(e => e.id === id);
     if (ex) ex.reserved = !ex.reserved;
     saveExpenses(); render();
+}
+
+// === Debug (ลบทีหลัง) ===
+function debugLS() {
+    const keys = Object.keys(localStorage);
+    const cards = localStorage.getItem('credit_cards');
+    const expenses = localStorage.getItem('credit_card_expenses');
+    alert('Keys: ' + JSON.stringify(keys) + '\n\nCards: ' + (cards ? cards.slice(0,200) : 'null') + '\n\nExpenses count: ' + (expenses ? JSON.parse(expenses).length : 'null'));
 }
 
 // === Init ===
