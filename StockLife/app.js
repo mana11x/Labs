@@ -110,6 +110,10 @@ function renderMain() {
             <p>จัดการสต๊อกของใช้ส่วนตัว</p>
             <p style="margin-top:8px">สร้างโดย <a href="https://promptpay.io/0923959404">Mana11Lab</a></p>
             <p style="margin-top:8px"><button class="btn btn-outline" onclick="copyLink()">📎 แชร์แอพนี้</button></p>
+            <div style="margin-top:8px;display:flex;gap:6px;justify-content:center">
+                <button class="btn btn-sm btn-outline" onclick="manualBackup()">💾 Backup</button>
+                <button class="btn btn-sm btn-outline" onclick="restoreBackup()">📂 Restore</button>
+            </div>
         </div>
         <div id="toast"></div>`;
 
@@ -270,4 +274,35 @@ function copyLink() {
     navigator.clipboard.writeText(location.href).then(() => toast('คัดลอกลิงก์แล้ว'));
 }
 
+// === AutoBackup ===
+function autoBackup() {
+    if (!state.categories.length) return;
+    const key = 'stocklife_last_backup';
+    const todayStr = new Date().toISOString().slice(0,10);
+    if (localStorage.getItem(key) === todayStr) return;
+    const blob = new Blob([JSON.stringify({ data: state, backupDate: todayStr })], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `StockLife_${todayStr}.json`; a.click();
+    localStorage.setItem(key, todayStr);
+    toast('💾 Auto-backup สำเร็จ');
+}
+
+function restoreBackup() {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = e => { const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader(); r.onload = ev => { try {
+            const d = JSON.parse(ev.target.result);
+            if (d.data) { state = d.data; save(); toast('✅ Restore สำเร็จ'); render(); }
+        } catch { toast('ไฟล์ไม่ถูกต้อง'); } }; r.readAsText(f); };
+    input.click();
+}
+
+function manualBackup() {
+    const blob = new Blob([JSON.stringify({ data: state, backupDate: new Date().toISOString().slice(0,10) })], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `StockLife_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    toast('💾 Backup สำเร็จ');
+}
+
 render();
+autoBackup();

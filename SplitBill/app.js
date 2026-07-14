@@ -287,6 +287,10 @@ function render() {
             <a href="https://promptpay.io/0923959404" target="_blank" class="btn btn-sm btn-outline-warning">☕ เลี้ยงน้ำหวานผ่าน PromptPay</a>
         </div>
         <button class="btn btn-sm btn-outline" onclick="copyLink()" style="margin-top:8px">📎 แชร์แอพนี้</button>
+        <div style="margin-top:8px;display:flex;gap:6px;justify-content:center">
+            <button class="btn btn-sm btn-outline" onclick="manualBackup()">💾 Backup</button>
+            <button class="btn btn-sm btn-outline" onclick="restoreBackup()">📂 Restore</button>
+        </div>
     </div>`;
 
     document.getElementById('app').innerHTML = html;
@@ -439,11 +443,50 @@ function copySummary() {
     navigator.clipboard.writeText(text).then(() => showToast('คัดลอกข้อความแล้ว ✅')).catch(() => showToast('คัดลอกไม่สำเร็จ', 'danger'));
 }
 
+// === AutoBackup ===
+function autoBackup() {
+    if (!state.members.length && !state.expenses.length) return;
+    const key = 'splitbill_last_backup';
+    const todayStr = new Date().toISOString().slice(0,10);
+    if (localStorage.getItem(key) === todayStr) return;
+    const allSlots = [];
+    for (let i = 0; i < MAX_SLOTS; i++) { allSlots.push(Store.get(`splitbill_slot${i}`)); }
+    const data = { slots: allSlots, billNames, backupDate: todayStr };
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `SplitBill_${todayStr}.json`; a.click();
+    localStorage.setItem(key, todayStr);
+    showToast('💾 Auto-backup สำเร็จ');
+}
+
+function restoreBackup() {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = e => { const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader(); r.onload = ev => { try {
+            const d = JSON.parse(ev.target.result);
+            if (d.slots) { d.slots.forEach((s, i) => { if (s) Store.set(`splitbill_slot${i}`, s); }); }
+            if (d.billNames) { billNames = d.billNames; saveBillNames(); }
+            load(); showToast('✅ Restore สำเร็จ'); render();
+        } catch { showToast('ไฟล์ไม่ถูกต้อง', 'danger'); } }; r.readAsText(f); };
+    input.click();
+}
+
+function manualBackup() {
+    const allSlots = [];
+    for (let i = 0; i < MAX_SLOTS; i++) { allSlots.push(Store.get(`splitbill_slot${i}`)); }
+    const data = { slots: allSlots, billNames, backupDate: new Date().toISOString().slice(0,10) };
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `SplitBill_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    showToast('💾 Backup สำเร็จ');
+}
+
 // === Init ===
 document.addEventListener('DOMContentLoaded', () => {
     loadBillNames();
     load();
     render();
+    autoBackup();
 });
 
 function copyLink() {

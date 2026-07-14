@@ -1549,5 +1549,21 @@ function copyLink() {
     navigator.clipboard.writeText(location.href).then(() => toast('คัดลอกลิงก์แล้ว'));
 }
 
+// --- AutoBackup ---
+function autoBackupLuX() {
+    const sessions = loadSessions();
+    if (!sessions.length) return;
+    const key = 'lux_last_backup';
+    const todayStr = new Date().toISOString().slice(0,10);
+    if (localStorage.getItem(key) === todayStr) return;
+    const json = createBackupJson();
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `LuX_${todayStr}.json`; a.click();
+    localStorage.setItem(key, todayStr);
+    toast('💾 Auto-backup สำเร็จ');
+}
+
 // --- Init ---
 showTab('session');
+autoBackupLuX();

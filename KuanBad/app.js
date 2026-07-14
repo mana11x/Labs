@@ -54,8 +54,23 @@ function route() {
     const routes = { home: renderHome, players: renderPlayers, match: renderMatch, summary: renderSummary, settings: renderSettings };
     (routes[page] || renderHome)();
 }
+// AutoBackup
+function autoBackup() {
+    const sessions = loadSessions();
+    if (!sessions.length) return;
+    const key = 'kuanbad_last_backup';
+    const todayStr = new Date().toISOString().slice(0,10);
+    if (localStorage.getItem(key) === todayStr) return;
+    const data = { sessions, knownNames: loadNames(), currentId: loadCurrent(), backupDate: todayStr };
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `KuanBad_${todayStr}.json`; a.click();
+    localStorage.setItem(key, todayStr);
+    toast('💾 Auto-backup สำเร็จ');
+}
+
 window.addEventListener('hashchange', route);
-window.addEventListener('load', route);
+window.addEventListener('load', () => { route(); autoBackup(); });
 
 // ===== HOME =====
 function renderHome() {
