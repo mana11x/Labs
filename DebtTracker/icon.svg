@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="256" fill="#12101A"/>
+  <!-- Coin stack -->
+  <ellipse cx="256" cy="310" rx="100" ry="28" fill="#1A7A4A"/>
+  <rect x="156" y="270" width="200" height="40" fill="#1A7A4A"/>
+  <ellipse cx="256" cy="270" rx="100" ry="28" fill="#22A060"/>
+  <ellipse cx="256" cy="240" rx="100" ry="28" fill="#1A7A4A"/>
+  <rect x="156" y="200" width="200" height="40" fill="#1A7A4A"/>
+  <ellipse cx="256" cy="200" rx="100" ry="28" fill="#22A060"/>
+  <!-- Arrow up (receive) -->
+  <path d="M256 80 L220 130 L244 130 L244 175 L268 175 L268 130 L292 130 Z" fill="#5DEBA0"/>
+  <!-- Small arrow down (pay) right side -->
+  <path d="M370 150 L348 150 L348 120 L332 120 L332 150 L310 150 L340 185 Z" fill="#F0A060" opacity="0.85"/>
+</svg>
