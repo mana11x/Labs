@@ -127,9 +127,9 @@ function renderEntryList(type, list, accounts) {
             html += renderEditEntry(entry, accounts);
         } else {
             // Header row
+            const dot = isReceive ? '🔴' : '🟡';
             html += `<div class="flex items-center gap-2 mb-1">
-                <span class="tag-${color}">${label}</span>
-                <strong style="font-size:1rem${closed ? ';opacity:0.5;text-decoration:line-through' : ''}">${esc(entry.person)}</strong>
+                <strong style="font-size:1rem${closed ? ';opacity:0.5;text-decoration:line-through' : ''}">${dot} ${esc(entry.person)}</strong>
                 <span class="ml-auto amount-${color}" style="${closed ? 'opacity:0.5' : ''}">${closed ? '✅ ปิดแล้ว' : fmt(unpaid) + ' ฿'}</span>
             </div>`;
 
@@ -146,7 +146,9 @@ function renderEntryList(type, list, accounts) {
             // Payment history
             if (payments.length) {
                 html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">`;
-                if (paid > 0) html += `<small style="color:var(--accent)">รับแล้ว ${fmt(paid)} ฿ จาก ${fmt(total)} ฿</small><br>`;
+                const overpaid = entryPaid(entry) - entryTotal(entry);
+                if (paid > 0 && !closed) html += `<small style="color:var(--accent)">รับแล้ว ${fmt(paid)} ฿ จาก ${fmt(total)} ฿</small><br>`;
+                if (closed && overpaid > 0.005) html += `<small style="color:var(--pay-text)">⚠️ โอนเกิน ${fmt(overpaid)} ฿ — ต้องโอนคืน</small><br>`;
                 payments.forEach((p, pi) => {
                     html += `<div class="flex items-center gap-1" style="font-size:0.8rem;margin-top:4px">
                         <span style="color:var(--accent)">${p.date}</span>
@@ -192,6 +194,9 @@ function renderEntryList(type, list, accounts) {
             html += `<div class="flex gap-1 mt-2">`;
             if (!isAddingPayment && !closed) {
                 html += `<button class="btn btn-sm btn-${color}" onclick="startAddPayment(${entry.id})">${payBtnLabel}</button>`;
+            }
+            if (isReceive) {
+                html += `<button class="btn btn-sm btn-outline" onclick="copyEntryMsg(${entry.id})">💬 ทวง</button>`;
             }
             html += `<button class="btn btn-sm btn-outline" onclick="startEdit(${entry.id})">✏️</button>`;
             if (ui.confirmDelete === entry.id) {
@@ -311,14 +316,16 @@ function renderSummary(receives, pays, accounts, totalReceive, totalPay, net, cl
             const unpaid = entryUnpaid(e);
             const total = entryTotal(e);
             const paid = entryPaid(e);
+            const overpaid = paid - total;
             const closed = unpaid <= 0 && total > 0;
             const acc = accounts.find(a => a.id === e.accountId);
-            html += `<div class="card card-receive mb-1" style="${closed ? 'opacity:0.55' : ''}">
+            html += `<div class="card card-receive mb-1" style="${closed && overpaid <= 0.005 ? 'opacity:0.55' : ''}">
                 <div class="flex items-center gap-2">
-                    <strong>${esc(e.person)}</strong>
-                    <span class="ml-auto amount-receive">${closed ? '✅ ปิดแล้ว' : fmt(unpaid) + ' ฿'}</span>
+                    <strong>🔴 ${esc(e.person)}</strong>
+                    <span class="ml-auto amount-receive">${closed && overpaid <= 0.005 ? '✅ ปิดแล้ว' : fmt(unpaid) + ' ฿'}</span>
                 </div>`;
-            if (paid > 0 && !closed) html += `<small style="color:var(--accent)">รับแล้ว ${fmt(paid)} ฿ / รวม ${fmt(total)} ฿</small><br>`;
+            if (overpaid > 0.005) html += `<small style="color:var(--pay-text)">⚠️ โอนเกิน ${fmt(overpaid)} ฿ — ต้องโอนคืน</small><br>`;
+            else if (paid > 0 && !closed) html += `<small style="color:var(--accent)">รับแล้ว ${fmt(paid)} ฿ / รวม ${fmt(total)} ฿</small><br>`;
             if (acc) html += `<small>🏦 รับที่: ${esc(acc.name)}${acc.detail ? ' ' + esc(acc.detail) : ''}</small><br>`;
             e.items.forEach(it => {
                 html += `<div class="flex gap-1" style="font-size:0.82rem">
@@ -340,7 +347,7 @@ function renderSummary(receives, pays, accounts, totalReceive, totalPay, net, cl
             const closed = unpaid <= 0 && total > 0;
             html += `<div class="card card-pay mb-1" style="${closed ? 'opacity:0.55' : ''}">
                 <div class="flex items-center gap-2">
-                    <strong>${esc(e.person)}</strong>
+                    <strong>🟡 ${esc(e.person)}</strong>
                     <span class="ml-auto amount-pay">${closed ? '✅ ปิดแล้ว' : fmt(unpaid) + ' ฿'}</span>
                 </div>`;
             if (paid > 0 && !closed) html += `<small style="color:var(--accent)">จ่ายแล้ว ${fmt(paid)} ฿ / รวม ${fmt(total)} ฿</small><br>`;
@@ -419,6 +426,34 @@ function copyText(text) {
         .catch(() => showToast('คัดลอกไม่สำเร็จ', 'danger'));
 }
 
+function copyEntryMsg(entryId) {
+    const e = state.entries.find(x => x.id === entryId);
+    if (!e) return;
+    const unpaid = entryUnpaid(e);
+    const paid = entryPaid(e);
+    const total = entryTotal(e);
+    const overpaid = paid - total;
+    const acc = state.accounts.find(a => a.id === e.accountId);
+
+    let text = `🔴 ${e.person}\n`;
+    if (overpaid > 0.005) {
+        text += `⚠️ โอนเกินมา ${fmt(overpaid)} ฿ — จะโอนคืนให้\n`;
+    } else {
+        text += `ยอดค้าง: ${fmt(unpaid)} ฿\n`;
+        if (paid > 0) text += `(รับแล้ว ${fmt(paid)} ฿ จาก ${fmt(total)} ฿)\n`;
+    }
+    if (e.items.length) {
+        text += `\nรายการ:\n`;
+        e.items.forEach(it => { text += `- ${it.desc}: ${fmt(it.amount)} ฿\n`; });
+    }
+    if (acc && acc.detail) {
+        text += `\nโอนมาที่:\n${acc.name} ${acc.detail}\n`;
+    }
+    navigator.clipboard.writeText(text)
+        .then(() => showToast('คัดลอกข้อความแล้ว ✅'))
+        .catch(() => showToast('คัดลอกไม่สำเร็จ', 'danger'));
+}
+
 function addItem(entryId) {
     const e = state.entries.find(x => x.id === entryId);
     if (!e) return;
@@ -488,11 +523,10 @@ function copySummary() {
     text += `ยอดสุทธิ: ${net >= 0 ? '+' : ''}${fmt(net)} ฿\n\n`;
 
     if (receives.length) {
-        text += `💚 ลูกหนี้:\n`;
         receives.forEach(e => {
             const unpaid = entryUnpaid(e);
             const paid = entryPaid(e);
-            text += `• ${e.person} — ค้าง ${fmt(unpaid)} ฿`;
+            text += `🔴 ${e.person} — ค้าง ${fmt(unpaid)} ฿`;
             if (paid > 0) text += ` (รับแล้ว ${fmt(paid)} ฿)`;
             text += `\n`;
             e.items.forEach(it => { text += `   - ${it.desc}: ${fmt(it.amount)} ฿\n`; });
@@ -503,11 +537,10 @@ function copySummary() {
     }
 
     if (pays.length) {
-        text += `🟠 เจ้าหนี้:\n`;
         pays.forEach(e => {
             const unpaid = entryUnpaid(e);
             const paid = entryPaid(e);
-            text += `• ${e.person} — ค้าง ${fmt(unpaid)} ฿`;
+            text += `🟡 ${e.person} — ค้าง ${fmt(unpaid)} ฿`;
             if (paid > 0) text += ` (จ่ายแล้ว ${fmt(paid)} ฿)`;
             text += `\n`;
             e.items.forEach(it => { text += `   - ${it.desc}: ${fmt(it.amount)} ฿\n`; });
