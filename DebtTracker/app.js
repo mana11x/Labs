@@ -1,6 +1,7 @@
 // === State ===
 // type: 'receive' = ลูกหนี้ (เขาต้องจ่ายเรา), 'pay' = เจ้าหนี้ (เราต้องจ่ายเขา)
 // entry: { id, type, person, items:[{id,desc,amount}], payments:[{id,amount,note,date}], accountId, note }
+// entry(pay) เพิ่ม payeeAccount: { name, number } — บัญชีของเจ้าหนี้ที่เราต้องโอนไป
 // account: { id, name, detail }
 
 let state = { entries: [], accounts: [], idCounter: 0 };
@@ -171,8 +172,21 @@ function renderEntryList(type, list, accounts) {
                 </div>`;
             }
 
-            if (isReceive && account) {
-                html += `<div class="mt-2" style="font-size:0.8rem;color:var(--accent)">🏦 รับเงินที่: <strong style="color:var(--text)">${esc(account.name)}</strong>${account.detail ? ` — ${esc(account.detail)}` : ''}</div>`;
+            if (isReceive && account && account.detail) {
+                html += `<div class="flex items-center gap-1 mt-2">
+                    <span style="font-size:0.8rem;color:var(--accent)">🏦 ${esc(account.name)}</span>
+                    <span style="font-size:0.8rem;color:var(--text)">${esc(account.detail)}</span>
+                    <button class="btn btn-sm btn-outline ml-auto" style="padding:2px 8px;font-size:0.75rem" onclick="copyText('${esc(account.detail)}')">📋</button>
+                </div>`;
+            } else if (isReceive && account) {
+                html += `<div class="mt-2" style="font-size:0.8rem;color:var(--accent)">🏦 ${esc(account.name)}</div>`;
+            }
+            if (!isReceive && entry.payeeAccount && entry.payeeAccount.number) {
+                html += `<div class="flex items-center gap-1 mt-2">
+                    <span style="font-size:0.8rem;color:var(--accent)">🏦 ${esc(entry.payeeAccount.name||'')}</span>
+                    <span style="font-size:0.8rem;color:var(--text)">${esc(entry.payeeAccount.number)}</span>
+                    <button class="btn btn-sm btn-outline ml-auto" style="padding:2px 8px;font-size:0.75rem" onclick="copyText('${esc(entry.payeeAccount.number)}')">📋</button>
+                </div>`;
             }
 
             html += `<div class="flex gap-1 mt-2">`;
@@ -205,13 +219,20 @@ function renderEditEntry(entry, accounts) {
         <input class="mb-2" value="${esc(entry.note||'')}" oninput="updateField(${entry.id},'note',this.value)" placeholder="หมายเหตุ (ไม่บังคับ)">`;
 
     if (isReceive) {
-        html += `<div class="label mb-1">🏦 บัญชีรับเงิน</div>
+        html += `<div class="label mb-1">🏦 บัญชีรับเงิน (ของเรา)</div>
         <select class="mb-2" onchange="updateField(${entry.id},'accountId',this.value?parseInt(this.value):null)">
             <option value="">-- ไม่ระบุ --</option>`;
         accounts.forEach(a => {
             html += `<option value="${a.id}" ${entry.accountId === a.id ? 'selected' : ''}>${esc(a.name)}${a.detail ? ' — ' + esc(a.detail) : ''}</option>`;
         });
         html += `</select>`;
+    } else {
+        const pa = entry.payeeAccount || {};
+        html += `<div class="label mb-1">🏦 บัญชีเจ้าหนี้ (ที่เราต้องโอนไป)</div>
+        <div class="flex gap-1 mb-1">
+            <input style="flex:1" value="${esc(pa.name||'')}" oninput="updatePayeeAccount(${entry.id},'name',this.value)" placeholder="ชื่อธนาคาร">
+            <input style="flex:2" value="${esc(pa.number||'')}" oninput="updatePayeeAccount(${entry.id},'number',this.value)" placeholder="เลขบัญชี / เบอร์">
+        </div>`;
     }
 
     html += `<div class="label mb-1">📋 รายการ</div>`;
@@ -382,6 +403,20 @@ function updateField(id, field, value) {
     if (field === 'accountId') e.accountId = value;
     else e[field] = value;
     save();
+}
+
+function updatePayeeAccount(id, field, value) {
+    const e = state.entries.find(x => x.id === id);
+    if (!e) return;
+    if (!e.payeeAccount) e.payeeAccount = { name: '', number: '' };
+    e.payeeAccount[field] = value;
+    save();
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => showToast('คัดลอกแล้ว ✅'))
+        .catch(() => showToast('คัดลอกไม่สำเร็จ', 'danger'));
 }
 
 function addItem(entryId) {
